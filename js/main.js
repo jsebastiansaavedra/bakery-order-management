@@ -56,16 +56,20 @@ jQuery('#mark-as-delivered').on('click', function() {
     }
 });
 
-function activateAccordionFunctionality() {
+function activateAccordionFunctionality( search = false ) {
     /**
      * Accordion functionality
      */
-    var acc = document.getElementsByClassName("items_accordion");
+    var acc = Array.from(document.getElementsByClassName("items_accordion"));
+
+    if( search ){
+        acc = acc.filter(element => !element.classList.contains("new-button"));
+    }
 
     for (var i = 0; i < acc.length; i++) {
         acc[i].addEventListener("click", function() {
             this.classList.toggle("active");
-            var panel = this.nextElementSibling;
+            var panel = document.getElementById("panel_"+this.id);
             if (panel.style.display === "block") {
                 panel.style.display = "none";
             } else {

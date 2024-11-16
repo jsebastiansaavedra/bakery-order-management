@@ -16,8 +16,8 @@ function boms_shortcode_payments()
                 <input type="text" name="search_payments" id="search_payments" placeholder="Buscar">
             </form>
         </div>
-        <button class="items_accordion new-button">Crear Pago</button>
-        <div class="main_panel">
+        <button class="items_accordion new-button" id="new_button">Crear Pago</button>
+        <div class="main_panel" id="panel_new_button">
             <table>
                 <tr>
                     <td><strong> Orden </strong></td>
@@ -83,8 +83,8 @@ function get_payments_html( $search = '' )
     if (! empty($data)) {
         foreach ($data as $payment_info) {
             $output .= '
-            <button class="items_accordion">' . esc_html($payment_info->name)  . '</button>
-            <div class="main_panel">
+            <button class="items_accordion" id="' . esc_html($payment_info->phone) . '">' . esc_html($payment_info->name)  . '</button>
+            <div class="main_panel" id="panel_' . esc_html($payment_info->phone) . '">
                 <table>
                     <tr>
                         <td><strong> Teléfono </strong></td>

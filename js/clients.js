@@ -97,7 +97,7 @@ document.getElementById('search_clients').addEventListener('input', function() {
             .then(data => {
                 // Display the results in the #results div
                 document.getElementById('results').innerHTML = data;
-                activateAccordionFunctionality();
+                activateAccordionFunctionality( true );
             })
             .catch(error => console.error('Error:', error));
 });

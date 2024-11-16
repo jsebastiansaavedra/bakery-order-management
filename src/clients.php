@@ -16,8 +16,8 @@ function boms_shortcode_clients()
                 <input type="text" name="search_clients" id="search_clients" placeholder="Buscar">
             </form>
         </div>
-        <button class="items_accordion new-button">Crear Cliente</button>
-        <div class="main_panel">
+        <button class="items_accordion new-button" id="new_button">Crear Cliente</button>
+        <div class="main_panel" id="panel_new_button">
             <table>
                 <tr>
                     <td><strong> Nombre </strong></td>
@@ -86,8 +86,8 @@ function get_clients_html( $search = '' )
     if (! empty($data)) {
         foreach ($data as $client_info) {
             $output .= '
-            <button class="items_accordion">' . esc_html($client_info->name)  . '</button>
-            <div class="main_panel">
+            <button class="items_accordion" id="' . esc_html($client_info->phone) . '">' . esc_html($client_info->name)  . '</button>
+            <div class="main_panel" id="panel_' . esc_html($client_info->phone) . '">
                 <table>
                     <tr>
                         <td><strong> Teléfono </strong></td>
