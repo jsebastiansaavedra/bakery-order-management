@@ -1,0 +1,150 @@
+.items_accordion {
+    background-color: #eee;
+    color: #444;
+    cursor: pointer;
+    padding: 18px;
+    width: 100%;
+    border: none;
+    text-align: left;
+    outline: none;
+    font-size: 15px;
+    transition: 0.4s;
+}
+
+.new-button {
+    width: fit-content !important;
+    margin-left: auto !important;
+    background-color: transparent !important;
+    color: #B24949 !important;
+}
+
+.new-button:hover {
+    color: #833535 !important;
+    text-decoration: underline !important;
+}
+
+.active, .items_accordion:hover {
+    background-color: #ccc; 
+}
+
+.main_panel {
+    padding: 1.5rem 1.5rem;
+    display: none;
+    background-color: white;
+    overflow: hidden;
+}
+
+.main-content {
+    text-align: center;
+    padding: 2rem;
+    width: 80%;
+    display: flex;
+    flex-direction: column;
+}
+
+.sales-panel, .money-balance-panel {
+    display: flex;
+}
+
+.card {
+    display: flex;
+    flex-direction: column;
+}
+
+.today-sales, .month-sales {
+    width: 50%;
+}
+
+.nequi-balance, .bancolombia-balance, .cash-balance {
+    width: 33.33%;
+}
+
+table {
+    font-family: arial, sans-serif;
+    border-collapse: collapse;
+    width: 100%;
+}
+
+td, th {
+    border: 1px solid #ccc;
+    text-align: left;
+    padding: 8px;
+}
+
+tr:nth-child(even) {
+    background-color: #dddddd;
+}
+
+.boms-page {
+    display: flex;
+    max-width: 100%;
+    padding: 2rem;
+}
+
+.icons-side-menu {
+    display: flex;
+    flex-direction: column;
+    width: fit-content;
+    align-items: center;
+}
+
+.icon-side-menu { 
+    align-items: center;
+    margin: 10px;
+    padding: 20px;
+    width: fit-content;
+    display: flex;
+    flex-direction: column;
+    color: #B24949;
+    text-decoration: none;
+    border-radius: 10px;
+    font-size: 1rem;
+}
+
+.icon-side-menu:hover { 
+    background-color: #ccc;
+}
+
+.fully_paid, .delivered {
+    color: green;
+}
+
+/* Dashboard numbers */
+
+.card {
+    margin: 20px;
+    padding: 20px;
+    border-radius: 10px;
+    transition: filter 0.3s ease;
+    color: white !important;
+}
+
+.card h3 {
+    color: white !important;
+}
+
+.card:hover {
+    filter: brightness(0.9);
+}
+
+.today-sales {
+    background-color: #ff8585;
+}
+
+.month-sales {
+    background-color: #70c2ba;
+}
+
+.nequi-balance {
+    background-color: #044B7F;
+}
+
+.bancolombia-balance {
+    background-color: #E9C46A;
+}
+
+.cash-balance {
+    background-color: #2A9D8F;
+}
+
+/* End of Dashboard numbers */
