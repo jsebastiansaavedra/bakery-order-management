@@ -79,26 +79,29 @@ jQuery(document).ready(function($) {
 });
 
 // SEARCH BAR
-// Get the search input and form elements
-const searchInput = document.getElementById('search_clients');
-const searchForm = document.getElementById('searchForm');
+var search_clients = document.getElementById('search_clients');
 
 // Add an event listener to prevent form submission on Enter key
-searchInput.addEventListener('keydown', function(event) {
-    if (event.key === 'Enter') {
-        event.preventDefault(); // Prevent form submission on Enter
-    }
-});
-document.getElementById('search_clients').addEventListener('input', function() {
-    const searchValue = this.value;
+if ( search_clients ) {
+    search_clients.addEventListener('keydown', function(event) {
+        if (event.key === 'Enter') {
+            event.preventDefault(); // Prevent form submission on Enter
+        }
+    });
+}
 
-    fetch(`../src/clients.php?search_clients=${encodeURIComponent(searchValue)}`)
-            .then(response => response.text())
-            .then(data => {
-                // Display the results in the #results div
-                document.getElementById('results').innerHTML = data;
-                activateAccordionFunctionality( true );
-            })
-            .catch(error => console.error('Error:', error));
-});
+if ( search_clients ){
+    search_clients.addEventListener('input', function() {
+        const searchValue = this.value;
+    
+        fetch(`../src/clients.php?search_clients=${encodeURIComponent(searchValue)}`)
+                .then(response => response.text())
+                .then(data => {
+                    // Display the results in the #results div
+                    document.getElementById('results').innerHTML = data;
+                    activateAccordionFunctionality( true );
+                })
+                .catch(error => console.error('Error:', error));
+    });
+}
 // END OF SEARCH BAR

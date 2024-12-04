@@ -74,8 +74,8 @@ function boms_shortcode_dashboard() {
             $products .= '</table></div>';
 
             $output .= '
-            <button class="items_accordion">'. check_if_paid( $item->fully_paid ) . check_if_delivered( $item->delivered ) . esc_html( date_i18n( 'j F\, Y', strtotime( $item->delivery_day ) ) ) . ' - ' . esc_html( $client_info[0]->name )  . '</button>
-            <div class="main_panel">
+            <button class="items_accordion" id="' . esc_html($item->order_id) . '">'. check_if_paid( $item->fully_paid ) . check_if_delivered( $item->delivered ) . esc_html( date_i18n( 'j F\, Y', strtotime( $item->delivery_day ) ) ) . ' - ' . esc_html( $client_info[0]->name )  . '</button>
+            <div class="main_panel" id="panel_' . esc_html($item->order_id) . '">
                 <table>
                     <tr>
                         <td><strong> Fecha de entrega </strong></td>

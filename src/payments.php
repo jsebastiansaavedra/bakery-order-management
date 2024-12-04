@@ -9,6 +9,18 @@ function boms_shortcode_payments()
 
     $output = '<div class="boms-page"> ' . get_side_menu();
 
+    // Fetch the non-paid orders
+    $non_paid_orders = get_non_paid_orders();
+
+    // Loop through the results and create options
+    $options = '';
+    $hidden = '';
+    foreach ($non_paid_orders as $order) {
+        // Assuming $order->client_phone exists
+        $options .= '<option value="' . esc_attr($order->order_id) . '">Orden #'. esc_html($order->order_id) .' - Cliente: '. esc_html($order->name) .' - ' . esc_html($order->client_phone) . '</option>';
+        $hidden .= '<input type="hidden" order-id="' . esc_attr($order->order_id) . '" name="balance" value="' . esc_attr($order->balance) . '">';
+    }
+
 
     $output .= '<div class="main-content">
         <div class="search_bar">
@@ -24,7 +36,13 @@ function boms_shortcode_payments()
                     <td>
                         <select name="payment_order_new" id="paymentOrderDropdown">
                             <option value="" disabled selected>Seleccionar</option>
+                            '. $options .'
+                            <option value="0">Otro concepto</option>
                         </select>
+                        '. $hidden .'
+                        <div class="debt-container" style="display: none;">
+                            Deuda: <span id="debt-value"></span>
+                        </div>
                     </td>
                 </tr>
                 <tr>
@@ -65,55 +83,92 @@ function boms_shortcode_payments()
 function get_payments_html( $search = '' )
 {
     global $wpdb;
-    $table_name = $wpdb->prefix . 'boms_payments';
+
+    // Table names
+    $orders_table = $wpdb->prefix . 'boms_orders';
+    $clients_table = $wpdb->prefix . 'boms_clients';
+    $payments_table = $wpdb->prefix . 'boms_payments';
 
     $search_query = '%' . $wpdb->esc_like( $search ) . '%';
 
-    $sql = $wpdb->prepare(
-        "SELECT * FROM $table_name 
-         WHERE phone LIKE %s OR name LIKE %s 
-         ORDER BY created_at DESC",
-        $search_query,
-        $search_query
-    );
+    // Query with INNER JOIN and subquery for balance
+    $sql = "
+        SELECT 
+            {$clients_table}.name, 
+            {$orders_table}.client_phone, 
+            {$orders_table}.order_id, 
+            {$payments_table}.payment_method, 
+            {$payments_table}.amount, 
+            {$payments_table}.payment_id,
+            {$payments_table}.created_at
+        FROM 
+            {$payments_table}
+        INNER JOIN 
+            {$orders_table} 
+        ON 
+            {$orders_table}.order_id = {$payments_table}.order_id
+        INNER JOIN 
+            {$clients_table} 
+        ON 
+            {$orders_table}.client_phone = {$clients_table}.phone
+        WHERE 
+            {$orders_table}.order_id LIKE %s OR {$clients_table}.name LIKE %s  OR {$orders_table}.client_phone LIKE %s 
+        ORDER BY 
+            {$orders_table}.delivery_day ASC
+    ";
 
-    $data = $wpdb->get_results($sql);
+    $data = $wpdb->get_results($wpdb->prepare($sql, $search_query, $search_query, $search_query));
     $output = '';
 
     if (! empty($data)) {
         foreach ($data as $payment_info) {
+            $payment_method = esc_html($payment_info->payment_method);
+            if ($payment_method == 1) {
+                $payment_method = "Nequi";
+            } elseif ($payment_method == 2) {
+                $payment_method = "Bancolombia";
+            } elseif ($payment_method == 3) {
+                $payment_method = "Efectivo";
+            } else {
+                echo "Unknown Payment Method"; 
+            }
             $output .= '
-            <button class="items_accordion" id="' . esc_html($payment_info->phone) . '">' . esc_html($payment_info->name)  . '</button>
-            <div class="main_panel" id="panel_' . esc_html($payment_info->phone) . '">
+            <button class="items_accordion" id="' . esc_html($payment_info->payment_id) . '">#' . esc_html($payment_info->order_id)  . ' - Cantidad: $ ' . esc_html( number_format( $payment_info->amount, 0, '.', ',' ) ) . ' '.  esc_html($payment_method) . ' - Cliente: '. esc_html($payment_info->name) .' - '. esc_html($payment_info->client_phone) .'</button>
+            <div class="main_panel" id="panel_' . esc_html($payment_info->payment_id) . '">
                 <table>
                     <tr>
-                        <td><strong> Teléfono </strong></td>
-                        <td><span>' . esc_html($payment_info->phone) . '</span></td>
+                        <td><strong> Orden </strong></td>
+                        <td><span>#' . esc_html($payment_info->order_id) . '</span></td>
                     </tr>
                     <tr>
-                        <td><strong> Nombre </strong></td>
-                        <td><input type="text" name="name_' . esc_html($payment_info->phone) . '" value="' . esc_html($payment_info->name) . '"></td>
+                        <td><strong> Cantidad </strong></td>
+                        <td><span>$ ' . esc_html( number_format( $payment_info->amount, 0, '.', ',' ) ) . '</span></td>
                     </tr>
                     <tr>
-                        <td><strong> Dirección </strong></td>
-                        <td><textarea name="address_' . esc_html($payment_info->phone) . '">' . esc_html($payment_info->address) . '</textarea></td>
-                    </tr>
-                    <tr>
-                        <td><strong> Edad </strong></td>
-                        <td><input type="number" name="age_' . esc_html($payment_info->phone) . '" value="' . esc_html($payment_info->age) . '"></td>
-                    </tr>
-                    <tr>
-                        <td><strong> Género </strong></td>
+                        <td><strong> Método de Pago </strong></td>
                         <td>
-                            <select name="genre_' . esc_html($payment_info->phone) . '" id="genreDropdown">
-                                <option value="" disabled ' . (empty($payment_info->genre) ? 'selected' : '') . '>Seleccionar</option>
-                                <option value="M" ' . ($payment_info->genre === 'M' ? 'selected' : '') . '>Hombre</option>
-                                <option value="F" ' . ($payment_info->genre === 'F' ? 'selected' : '') . '>Mujer</option>
+                            <select name="payment_method_' . esc_html($payment_info->payment_id) . '" id="paymentMethodDropdown">
+                                <option value="" disabled ' . (empty($payment_info->payment_method) ? 'selected' : '') . '>Seleccionar</option>
+                                <option value="1" ' . ($payment_info->payment_method === '1' ? 'selected' : '') . '>Nequi</option>
+                                <option value="2" ' . ($payment_info->payment_method === '2' ? 'selected' : '') . '>Bancolombia</option>
+                                <option value="3" ' . ($payment_info->payment_method === '3' ? 'selected' : '') . '>Efectivo</option>
                             </select>
                         </td>
                     </tr>
+                    <tr>
+                        <td><strong> Pagado en </strong></td>
+                        <td>' . esc_html( date_i18n( 'j F\, Y', strtotime( $payment_info->created_at ) ) ) . '</td>
+                    </tr>
+                    <tr>
+                        <td><strong> Cliente </strong></td>
+                        <td><span>' . esc_html($payment_info->name) . '</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong> Teléfono </strong></td>
+                        <td><span>' . esc_html($payment_info->client_phone) . '</span></td>
+                    </tr>
                 </table>
-                <button id="update-payment" class="btn-update" data-payment-id="' . esc_html($payment_info->phone) . '">
+                <button id="update-payment" class="btn-update" data-payment-id="' . esc_html($payment_info->payment_id) . '">
                     Actualizar
                 </button>
             </div>
@@ -131,16 +186,16 @@ if (isset($_GET['search_payments'])) {
     exit;
 }
 
-function update_payments($payment_id, $phone, $name, $address, $genre, $age)
+function update_payments($payment_id, $payment_method)
 {
     global $wpdb;
     $table_name = $wpdb->prefix . 'boms_payments';
 
     $sql = "UPDATE $table_name 
-            SET phone = %s, name = %s, address = %s, genre = %s, age = %d 
-            WHERE phone = %d";
+            SET payment_method = %d
+            WHERE payment_id = %d";
 
-    return $wpdb->query($wpdb->prepare($sql, $phone, $name, $address, $genre, $age, $payment_id));
+    return $wpdb->query($wpdb->prepare($sql, $payment_method, $payment_id));
 }
 
 add_action('wp_ajax_call_update_payments', 'handle_update_payments');
@@ -151,22 +206,10 @@ function handle_update_payments()
     if (isset($_POST['payment_id'])) {
 
         $payment_id = sanitize_text_field($_POST['payment_id']);
-        $name = sanitize_text_field($_POST['name']);
-        $phone = sanitize_text_field($_POST['phone']);
-        $address = sanitize_textarea_field($_POST['address']);
-        $genre = sanitize_text_field($_POST['genre']);
-        $age = intval($_POST['age']);
-
-        // Remove all spaces to the phone
-        $phone = str_replace(' ', '', $phone);
-
-        // Remove +57 if it starts with that
-        if (strpos($phone, '+57') === 0) {
-            $phone = substr($phone, 3);
-        }
+        $payment_method = sanitize_text_field($_POST['payment_method']);
 
         // Call the update delivery function
-        $result = update_payments($payment_id, $phone, $name, $address, $genre, $age);
+        $result = update_payments($payment_id, $payment_method);
 
         if ($result !== false) {
             wp_send_json_success('Payment updated successfully.');
@@ -181,42 +224,38 @@ function handle_update_payments()
 }
 
 
-function create_payments($phone, $name, $address, $genre, $age)
+function create_payments($order_id, $payment_method, $amount)
 {
     global $wpdb;
     $table_name = $wpdb->prefix . 'boms_payments';
 
-    $sql = "INSERT INTO $table_name (phone, name, address, genre, age) 
-            VALUES (%s, %s, %s, %s, %d)";
-
-    return $wpdb->query($wpdb->prepare($sql, $phone, $name, $address, $genre, $age));
+    // Use $wpdb->insert() for cleaner and safer insertion
+    $data = [
+        'order_id' => $order_id,
+        'payment_method' => $payment_method,
+        'amount' => $amount,
+    ];
+    
+    $format = ['%d', '%d', '%d'];
+    
+    return $wpdb->insert($table_name, $data, $format);
 }
 
 add_action('wp_ajax_call_create_payments', 'handle_create_payments');
 add_action('wp_ajax_nopriv_call_create_payments', 'handle_create_payments');
 
-function handle_create_payments()
-{
-    if (isset($_POST['name']) && isset($_POST['phone']) && isset($_POST['address']) && isset($_POST['genre']) && isset($_POST['age'])) {
+function handle_create_payments() {
+    if (isset($_POST['order_id']) && isset($_POST['payment_method']) && isset($_POST['amount'])) {
 
-        $name = sanitize_text_field($_POST['name']);
-        $phone = sanitize_text_field($_POST['phone']);
-        $address = sanitize_textarea_field($_POST['address']);
-        $genre = sanitize_text_field($_POST['genre']);
-        $age = intval($_POST['age']);
-
-        // Remove all spaces to the phone
-        $phone = str_replace(' ', '', $phone);
-
-        // Remove +57 if it starts with that
-        if (strpos($phone, '+57') === 0) {
-            $phone = substr($phone, 3);
-        }
+        $order_id = intval($_POST['order_id']);
+        $payment_method = intval($_POST['payment_method']);
+        $amount = intval($_POST['amount']);
 
         // Call the create delivery function
-        $result = create_payments($phone, $name, $address, $genre, $age);
+        $result = create_payments($order_id, $payment_method, $amount);
 
         if ($result !== false) {
+            $result_mark_as_fully_paid = mark_as_fully_paid($order_id);
             wp_send_json_success('Payment created successfully.');
         } else {
             wp_send_json_error('Failed to create payment.');
@@ -226,4 +265,64 @@ function handle_create_payments()
     }
 
     wp_die();
+}
+
+function mark_as_fully_paid($order_id) {
+    global $wpdb;
+    $orders_table = $wpdb->prefix . 'boms_orders';
+    $payments_table = $wpdb->prefix . 'boms_payments';
+
+    $sql = "
+        UPDATE $orders_table AS o
+        SET fully_paid = 1
+        WHERE o.order_id = %d
+        AND (
+            SELECT SUM(p.amount)
+            FROM $payments_table AS p
+            WHERE p.order_id = %d
+        ) = o.final_price
+    ";
+
+    // Prepare the query with the order ID
+    $prepared_sql = $wpdb->prepare($sql, $order_id, $order_id);
+
+    // Execute the query
+    return $wpdb->query($prepared_sql);
+}
+
+function get_non_paid_orders() {
+    global $wpdb;
+
+    // Table names
+    $orders_table = $wpdb->prefix . 'boms_orders';
+    $clients_table = $wpdb->prefix . 'boms_clients';
+    $payments_table = $wpdb->prefix . 'boms_payments';
+
+    // Query with INNER JOIN and subquery for balance
+    $sql = "
+        SELECT 
+            {$clients_table}.name, 
+            {$orders_table}.client_phone, 
+            {$orders_table}.order_id, 
+            {$orders_table}.final_price - (
+                SELECT 
+                    COALESCE(SUM(amount), 0) 
+                FROM 
+                    {$payments_table} 
+                WHERE 
+                    {$payments_table}.order_id = {$orders_table}.order_id
+            ) AS balance
+        FROM 
+            {$orders_table}
+        INNER JOIN 
+            {$clients_table} 
+        ON 
+            {$clients_table}.phone = {$orders_table}.client_phone
+        WHERE 
+            {$orders_table}.fully_paid = 0 
+        ORDER BY 
+            {$orders_table}.delivery_day ASC
+    ";
+
+    return $wpdb->get_results($sql);
 }
