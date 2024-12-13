@@ -58,10 +58,12 @@ function order_management_plugin_init() {
     require_once __DIR__ . '/src/clients.php';
     require_once __DIR__ . '/src/payments.php';
     require_once __DIR__ . '/src/expenses.php';
+    require_once __DIR__ . '/src/products.php';
     create_related_tables();
     add_shortcode( 'boms_dashboard', 'boms_shortcode_dashboard' );
     add_shortcode( 'boms_orders', 'boms_shortcode_orders' );
     add_shortcode( 'boms_clients', 'boms_shortcode_clients' );
     add_shortcode( 'boms_payments', 'boms_shortcode_payments' );
     add_shortcode( 'boms_expenses', 'boms_shortcode_expenses' );
+    add_shortcode( 'boms_products', 'boms_shortcode_products' );
 }
