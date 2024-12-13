@@ -77,39 +77,37 @@ jQuery(document).ready(function($) {
     const paymentOrderDropdown = document.getElementById("paymentOrderDropdown");
 
     // Add a change event listener
-    paymentOrderDropdown.addEventListener("change", function() {
-        // Get the order id
-        const orderId = this.value;
-
-        // Get the container element to show the debt
-        var debtContainer = document.querySelector(".debt-container");
-
-        // Clear the payment method dropdown
-        document.querySelector(`select[name="payment_method_new"]`).value = "";
-
-        if ( orderId != 0 ) {
-            // Show the container
-            debtContainer.style.display = "block";
-
-            // Get the balance
-            var balance = parseInt(document.querySelector(`input[order-id="${orderId}"]`).value);
-
-            // Add the full value by default
-            document.querySelector(`input[name="payment_amount_new"]`).value = balance;
-
-            // Format the balance as a number with thousands separators
-            var formattedBalance = new Intl.NumberFormat('en-US').format(balance);
-
-            // Update the balance span
-            document.getElementById("debt-value").textContent = `-${formattedBalance}`;
-        } else {
-            debtContainer.style.display = "none";
-        }
-
-        
-
-        
-    });
+    if (paymentOrderDropdown){
+        paymentOrderDropdown.addEventListener("change", function() {
+            // Get the order id
+            const orderId = this.value;
+    
+            // Get the container element to show the debt
+            var debtContainer = document.querySelector(".debt-container");
+    
+            // Clear the payment method dropdown
+            document.querySelector(`select[name="payment_method_new"]`).value = "";
+    
+            if ( orderId != 0 ) {
+                // Show the container
+                debtContainer.style.display = "block";
+    
+                // Get the balance
+                var balance = parseInt(document.querySelector(`input[order-id="${orderId}"]`).value);
+    
+                // Add the full value by default
+                document.querySelector(`input[name="payment_amount_new"]`).value = balance;
+    
+                // Format the balance as a number with thousands separators
+                var formattedBalance = new Intl.NumberFormat('en-US').format(balance);
+    
+                // Update the balance span
+                document.getElementById("debt-value").textContent = `-${formattedBalance}`;
+            } else {
+                debtContainer.style.display = "none";
+            }
+        });
+    }
     // END OF ON CHANGE ORDER
 });
 
